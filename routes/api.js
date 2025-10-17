@@ -20,7 +20,7 @@ module.exports = function (app) {
       // 🔹 Obtener los datos de cada acción desde el proxy de freeCodeCamp
       const stockData = await Promise.all(
         stock.map(async (symbol) => {
-          const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${symbol}/quote`;
+          const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/[symbol]/quote`;
           const response = await fetch(url);
           const data = await response.json();
 
