@@ -1,7 +1,7 @@
 image: gitpod/workspace-node-lts
 
 ports:
-  - port: 3000
+  - port: 10000
     onOpen: open-preview
     visibility: public
 
