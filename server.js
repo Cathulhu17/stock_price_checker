@@ -33,9 +33,6 @@ app.get('/', (req, res) => {
   res.send('🚀 Stock Price Checker conectado a MongoDB Atlas y funcionando correctamente.');
 });
 
-// Rutas API
-const apiRoutes = require('./routes/api.js');
-apiRoutes(app);
 
 // Puerto
 const PORT = process.env.PORT || 10000;

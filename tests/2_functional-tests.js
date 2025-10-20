@@ -5,50 +5,60 @@ const server = require('../server');
 
 chai.use(chaiHttp);
 
-suite('Pruebas Funcionales', function () {
-  this.timeout(5000);
+suite('Functional Tests', function () {
 
-  test('Ver una acción', function (done) {
+  this.timeout(10000); // por si la API tarda
+
+  let likesBefore = 0;
+
+  // 1️⃣ Ver una acción
+  test('Viewing one stock: GET /api/stock-prices/', function (done) {
     chai.request(server)
       .get('/api/stock-prices')
       .query({ stock: 'GOOG' })
-      .end((err, res) => {
+      .end(function (err, res) {
         assert.equal(res.status, 200);
         assert.property(res.body, 'stockData');
-        assert.property(res.body.stockData, 'stock');
+        assert.equal(res.body.stockData.stock, 'GOOG');
         assert.property(res.body.stockData, 'price');
         assert.property(res.body.stockData, 'likes');
+        likesBefore = res.body.stockData.likes;
         done();
       });
   });
 
-  test('Ver una acción y darle like', function (done) {
+  // 2️⃣ Ver una acción y darle "like"
+  test('Viewing one stock and liking it: GET /api/stock-prices/', function (done) {
     chai.request(server)
       .get('/api/stock-prices')
-      .query({ stock: 'AAPL', like: true })
-      .end((err, res) => {
+      .query({ stock: 'GOOG', like: true })
+      .end(function (err, res) {
         assert.equal(res.status, 200);
-        assert.isAtLeast(res.body.stockData.likes, 1);
+        assert.equal(res.body.stockData.stock, 'GOOG');
+        assert.isAtLeast(res.body.stockData.likes, likesBefore);
         done();
       });
   });
 
-  test('Ver la misma acción y volver a darle like (no debería duplicarse)', function (done) {
+  // 3️⃣ Ver la misma acción y volver a darle like (no debe aumentar)
+  test('Viewing the same stock and liking it again: GET /api/stock-prices/', function (done) {
     chai.request(server)
       .get('/api/stock-prices')
-      .query({ stock: 'AAPL', like: true })
-      .end((err, res) => {
+      .query({ stock: 'GOOG', like: true })
+      .end(function (err, res) {
         assert.equal(res.status, 200);
-        assert.isAtLeast(res.body.stockData.likes, 1);
+        assert.equal(res.body.stockData.stock, 'GOOG');
+        assert.equal(res.body.stockData.likes, likesBefore + 1); // no suma más likes
         done();
       });
   });
 
-  test('Ver dos acciones a la vez', function (done) {
+  // 4️⃣ Ver dos acciones
+  test('Viewing two stocks: GET /api/stock-prices/', function (done) {
     chai.request(server)
       .get('/api/stock-prices')
       .query({ stock: ['GOOG', 'MSFT'] })
-      .end((err, res) => {
+      .end(function (err, res) {
         assert.equal(res.status, 200);
         assert.isArray(res.body.stockData);
         assert.equal(res.body.stockData.length, 2);
@@ -57,11 +67,12 @@ suite('Pruebas Funcionales', function () {
       });
   });
 
-  test('Ver dos acciones y darles like', function (done) {
+  // 5️⃣ Ver dos acciones y darles like
+  test('Viewing two stocks and liking them: GET /api/stock-prices/', function (done) {
     chai.request(server)
       .get('/api/stock-prices')
       .query({ stock: ['GOOG', 'MSFT'], like: true })
-      .end((err, res) => {
+      .end(function (err, res) {
         assert.equal(res.status, 200);
         assert.isArray(res.body.stockData);
         assert.equal(res.body.stockData.length, 2);
@@ -69,4 +80,6 @@ suite('Pruebas Funcionales', function () {
         done();
       });
   });
+
 });
+
