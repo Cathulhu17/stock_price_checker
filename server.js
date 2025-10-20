@@ -1,55 +1,46 @@
 'use strict';
 require('dotenv').config();
-const express     = require('express');
-const bodyParser  = require('body-parser');
-const cors        = require('cors');
-
-const apiRoutes         = require('./routes/api.js');
-const fccTestingRoutes  = require('./routes/fcctesting.js');
-const runner            = require('./test-runner');
+const express = require('express');
+const mongoose = require('mongoose');
+const helmet = require('helmet');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const fccTesting = require('./freeCodeCamp/fcctesting.js');
+const apiRoutes = require('./routes/api.js');
+apiRoutes(app);
 
 const app = express();
+fccTesting(app);
 
-app.use('/public', express.static(process.cwd() + '/public'));
-
-app.use(cors({origin: '*'})); //For FCC testing purposes only
-
+// Seguridad con Helmet
+app.use(helmet());
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//Index page (static HTML)
-app.route('/')
-  .get(function (req, res) {
-    res.sendFile(process.cwd() + '/views/index.html');
-  });
+// 🔗 Conectar a MongoDB Atlas usando la URI del .env
+const MONGO_URI = process.env.MONGO_URI;
 
-//For FCC testing purposes
-fccTestingRoutes(app);
+mongoose.connect(MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('✅ Conectado correctamente a MongoDB Atlas'))
+  .catch((err) => console.error('❌ Error al conectar MongoDB:', err.message));
 
-//Routing for API 
-apiRoutes(app);  
-    
-//404 Not Found Middleware
-app.use(function(req, res, next) {
-  res.status(404)
-    .type('text')
-    .send('Not Found');
+// Ruta base
+app.get('/', (req, res) => {
+  res.send('🚀 Stock Price Checker conectado a MongoDB Atlas y funcionando correctamente.');
 });
 
-//Start our server and tests!
-const listener = app.listen(process.env.PORT || 10000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
-  if(process.env.NODE_ENV==='test') {
-    console.log('Running Tests...');
-    setTimeout(function () {
-      try {
-        runner.run();
-      } catch(e) {
-        console.log('Tests are not valid:');
-        console.error(e);
-      }
-    }, 3500);
-  }
+// Rutas API
+const apiRoutes = require('./routes/api.js');
+apiRoutes(app);
+
+// Puerto
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🟢 Servidor escuchando en puerto ${PORT}`);
 });
 
-module.exports = app; //for testing
+module.exports = app;
