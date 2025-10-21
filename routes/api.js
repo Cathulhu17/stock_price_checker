@@ -1,11 +1,32 @@
-'use strict';
-const bcrypt = require('bcrypt'); // para anonimizar IPs
+''use strict';
+const fetch = require('node-fetch');
+const bcrypt = require('bcrypt');
+const helmet = require('helmet');
 
 // Estructura de datos en memoria
 // Ejemplo: { "GOOG": { likes: Set(), price: 130.25 } }
 const stocks = {};
 
 module.exports = function (app) {
+  // 🛡️ Aplicar una política CSP solo a las rutas de esta API
+  app.use(
+    '/api/',
+    helmet.contentSecurityPolicy({
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "connect-src": [
+          "'self'",
+          "https://stock-price-checker-proxy.freecodecamp.rocks", // 🔹 Permitimos la API de FCC
+        ],
+        "script-src": ["'self'"],
+        "style-src": ["'self'"],
+        "img-src": ["'self'", "data:"],
+      },
+    })
+  );
+
+  // Ruta principal: /api/stock-prices
   app.route('/api/stock-prices').get(async function (req, res) {
     try {
       let { stock, like } = req.query;
@@ -16,16 +37,12 @@ module.exports = function (app) {
         stock = [stock];
       }
 
-      // 🔹 Obtener los datos de cada acción desde el proxy de freeCodeCamp
+      // 🔹 Obtener los datos de cada acción desde el proxy de FreeCodeCamp
       const stockData = await Promise.all(
         stock.map(async (symbol) => {
           const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${symbol}/quote`;
-          const response = await fetch(url); // ✅ fetch nativo en Node 22
+          const response = await fetch(url);
           const data = await response.json();
-
-          if (!data || !data.symbol) {
-            return { stock: symbol.toUpperCase(), price: null, likes: 0 };
-          }
 
           const price = data.latestPrice;
           const stockSymbol = data.symbol.toUpperCase();
@@ -33,9 +50,9 @@ module.exports = function (app) {
           // Si no existe la acción en memoria, la inicializamos
           if (!stocks[stockSymbol]) stocks[stockSymbol] = { likes: new Set(), price };
 
-          // 🔹 Anonimizar la IP (para cumplir con privacidad)
+          // 🔹 Anonimizar la IP (cumpliendo GDPR)
           const ip = req.ip || req.connection.remoteAddress;
-          const anonIp = bcrypt.hashSync(ip, 4); // se guarda un hash, no la IP real
+          const anonIp = bcrypt.hashSync(ip, 4);
 
           // Si el usuario le da "like", lo registramos
           if (like) {
@@ -72,4 +89,3 @@ module.exports = function (app) {
     }
   });
 };
-
