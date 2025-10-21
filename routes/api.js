@@ -1,70 +1,52 @@
 'use strict';
-const fetch = require('node-fetch');
+
+const express = require('express');
+const axios = require('axios');
 const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
 
-const stocks = {};
+const router = express.Router();
 
-module.exports = function (app) {
-  app.route('/api/stock-prices').get(async function (req, res) {
-    try {
-      let { stock, like } = req.query;
-      if (!stock) return res.status(400).json({ error: 'Debes especificar un stock' });
+// Esquema para los likes de acciones
+const stockSchema = new mongoose.Schema({
+  stock: { type: String, required: true },
+  likes: { type: [String], default: [] } // guardamos IPs anonimizadas
+});
 
-      if (typeof stock === 'string') stock = [stock];
+const Stock = mongoose.model('Stock', stockSchema);
 
-      const stockData = await Promise.all(
-        stock.map(async (symbol) => {
-          const response = await fetch(
-            `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${symbol}/quote`
-          );
-          const data = await response.json();
+router.get('/stock-prices', async (req, res) => {
+  const { stock, like } = req.query;
+  const ip = req.ip || req.headers['x-forwarded-for'] || '0.0.0.0';
+  const hashedIP = bcrypt.hashSync(ip, 5);
 
-          if (!data || !data.symbol || !data.latestPrice) {
-            return { stock: symbol.toUpperCase(), price: null, likes: 0 };
-          }
+  try {
+    const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${stock}/quote`;
+    const response = await axios.get(url);
+    const stockPrice = response.data.latestPrice;
 
-          const price = data.latestPrice;
-          const stockSymbol = data.symbol.toUpperCase();
+    let stockData = await Stock.findOne({ stock: stock.toUpperCase() });
 
-          if (!stocks[stockSymbol]) stocks[stockSymbol] = { likes: new Set(), price };
-
-          const ip = req.ip || req.connection.remoteAddress;
-          const anonIp = bcrypt.hashSync(ip, 4);
-
-          if (like === 'true') {
-            stocks[stockSymbol].likes.add(anonIp);
-          }
-
-          return {
-            stock: stockSymbol,
-            price,
-            likes: stocks[stockSymbol].likes.size,
-          };
-        })
-      );
-
-      if (stockData.length === 2) {
-        const [s1, s2] = stockData;
-        return res.json({
-          stockData: [
-            {
-              stock: s1.stock,
-              price: s1.price,
-              rel_likes: s1.likes - s2.likes,
-            },
-            {
-              stock: s2.stock,
-              price: s2.price,
-              rel_likes: s2.likes - s1.likes,
-            },
-          ],
-        });
-      }
-
-      res.json({ stockData: stockData[0] });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Error interno del servidor' });
+    if (!stockData) {
+      stockData = new Stock({ stock: stock.toUpperCase(), likes: [] });
     }
-  });
-};
+
+    if (like && !stockData.likes.includes(hashedIP)) {
+      stockData.likes.push(hashedIP);
+      await stockData.save();
+    }
+
+    res.json({
+      stockData: {
+        stock: stock.toUpperCase(),
+        price: stockPrice,
+        likes: stockData.likes.length
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error fetching stock data' });
+  }
+});
+
+module.exports = router;
