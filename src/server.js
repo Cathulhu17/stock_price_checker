@@ -6,7 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const bcrypt = require('bcrypt');
 
-const apiRoutes = require('./routes/api.js');
+const apiRoutes = require('../routes/api.js');
 
 const app = express();
 
