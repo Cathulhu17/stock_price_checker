@@ -1,4 +1,4 @@
-''use strict';
+'use strict';
 const fetch = require('node-fetch');
 const bcrypt = require('bcrypt');
 const helmet = require('helmet');
