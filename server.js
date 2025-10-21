@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const apiRoutes = require('./routes/api.js');
+const fccTesting = require('./freeCodeCamp/fcctesting.js');
 apiRoutes(app);
 
 const app = express();

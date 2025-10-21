@@ -1,5 +1,4 @@
 'use strict';
-const fetch = require('node-fetch');
 const bcrypt = require('bcrypt'); // para anonimizar IPs
 
 // Estructura de datos en memoria
@@ -20,9 +19,13 @@ module.exports = function (app) {
       // 🔹 Obtener los datos de cada acción desde el proxy de freeCodeCamp
       const stockData = await Promise.all(
         stock.map(async (symbol) => {
-          const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/[symbol]/quote`;
-          const response = await fetch(url);
+          const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${symbol}/quote`;
+          const response = await fetch(url); // ✅ fetch nativo en Node 22
           const data = await response.json();
+
+          if (!data || !data.symbol) {
+            return { stock: symbol.toUpperCase(), price: null, likes: 0 };
+          }
 
           const price = data.latestPrice;
           const stockSymbol = data.symbol.toUpperCase();
@@ -69,3 +72,4 @@ module.exports = function (app) {
     }
   });
 };
+
