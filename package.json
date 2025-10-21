@@ -1,39 +1,24 @@
 {
-	"name": "boilerplate-project-stockchecker",
-	"version": "0.0.1",
-	"description": "InfoSec project for freeCodeCamp",
-	"scripts": {
-		"start": "node server.js"
-	},
-	"dependencies": {
-		"bcrypt": "^6.0.0",
-		"body-parser": "^1.15.2",
-		"chai": "^4.5.0",
-		"chai-http": "^4.4.0",
-		"cors": "^2.8.5",
-		"dotenv": "^8.6.0",
-		"express": "^4.21.2",
-		"helmet": "^3.23.3",
-		"mocha": "^11.7.4",
-		"mongoose": "^8.19.2",
-		"node-fetch": "^2.7.0"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/freeCodeCamp/boilerplate-project-stockchecker.git"
-	},
-	"keywords": [
-		"node",
-		"express"
-	],
-	"license": "MIT",
-	"main": "assertion-analyser.js",
-	"directories": {
-		"test": "tests"
-	},
-	"author": "",
-	"bugs": {
-		"url": "https://github.com/freeCodeCamp/boilerplate-project-stockchecker/issues"
-	},
-	"homepage": "https://github.com/freeCodeCamp/boilerplate-project-stockchecker#readme"
+  "name": "stock-price-checker-render",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "mocha tests/2_functional-tests.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "helmet": "^7.1.0",
+    "bcrypt": "^5.1.1",
+    "node-fetch": "^2.6.7",
+    "mongoose": "^8.6.3",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.3"
+  },
+  "devDependencies": {
+    "mocha": "^11.0.1",
+    "chai": "^5.1.1",
+    "chai-http": "^4.3.0"
+  }
 }

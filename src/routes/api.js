@@ -1,72 +1,53 @@
 'use strict';
+const fetch = require('node-fetch');
+const crypto = require('crypto');
+const Stock = require('../models/Stock');
 
-const fetch = require('node-fetch'); // Requiere node-fetch v2
-const bcrypt = require('bcrypt'); // Para anonimizar IPs
-
-// Datos en memoria
-// Ejemplo: { "GOOG": { likes: Set(), price: 130.25 } }
-const stocks = {};
-
-module.exports = function (app) {
-  app.route('/api/stock-prices').get(async function (req, res) {
+module.exports = function(app) {
+  app.get('/api/stock-prices', async (req, res) => {
     try {
       let { stock, like } = req.query;
-      if (!stock) return res.status(400).json({ error: 'Debes especificar un stock' });
-
-      // Si es una sola acción, convertir a array
+      if (!stock) return res.status(400).json({ error: 'Missing stock parameter' });
       if (typeof stock === 'string') stock = [stock];
 
-      // Obtener datos de cada acción
-      const stockData = await Promise.all(
-        stock.map(async (symbol) => {
-          const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${symbol}/quote`;
-          const response = await fetch(url);
-          const data = await response.json();
+      const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress || '';
+      const anonIp = crypto.createHash('sha256').update(ip).digest('hex');
 
-          if (!data || data === 'Unknown symbol') {
-            throw new Error(`No se encontró la acción: ${symbol}`);
+      const results = await Promise.all(stock.map(async (s) => {
+        const symbol = s.toUpperCase();
+        const url = `https://stock-price-checker-proxy.freecodecamp.rocks/v1/stock/${symbol}/quote`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const price = data && data.latestPrice ? data.latestPrice : null;
+
+        let doc = await Stock.findOne({ symbol });
+        if (!doc) {
+          doc = new Stock({ symbol, likes: [] });
+        }
+
+        if (like === 'true' || like === true) {
+          if (!doc.likes.includes(anonIp)) {
+            doc.likes.push(anonIp);
+            await doc.save();
           }
+        }
 
-          const price = data.latestPrice;
-          const stockSymbol = data.symbol.toUpperCase();
+        return { stock: symbol, price, likes: doc.likes.length };
+      }));
 
-          if (!stocks[stockSymbol]) stocks[stockSymbol] = { likes: new Set(), price };
-
-          // Anonimizar IP
-          const ip = req.ip || req.connection.remoteAddress;
-          const anonIp = bcrypt.hashSync(ip, 4); // hash de IP
-
-          // Registrar like si aplica
-          if (like) stocks[stockSymbol].likes.add(anonIp);
-
-          return {
-            stock: stockSymbol,
-            price,
-            likes: stocks[stockSymbol].likes.size,
-          };
-        })
-      );
-
-      // Rel_likes si hay 2 acciones
-      if (stockData.length === 2) {
-        const [s1, s2] = stockData;
-        const rel_likes1 = s1.likes - s2.likes;
-        const rel_likes2 = s2.likes - s1.likes;
-
-        return res.json({
-          stockData: [
-            { stock: s1.stock, price: s1.price, rel_likes: rel_likes1 },
-            { stock: s2.stock, price: s2.price, rel_likes: rel_likes2 },
-          ],
-        });
+      if (results.length === 2) {
+        const a = results[0], b = results[1];
+        return res.json({ stockData: [
+          { stock: a.stock, price: a.price, rel_likes: a.likes - b.likes },
+          { stock: b.stock, price: b.price, rel_likes: b.likes - a.likes }
+        ]});
       }
 
-      // Si es solo 1 acción
-      res.json({ stockData: stockData[0] });
+      res.json({ stockData: results[0] });
 
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Error interno del servidor' });
+      res.status(500).json({ error: 'Internal Server Error' });
     }
   });
 };
