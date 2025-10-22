@@ -27,12 +27,11 @@ fccTesting(app);
 require('./routes/api.js')(app);
 
 app.get('/', (req, res) => {
-  res.send('Stock Price Checker - modo FCC listo ✅');
+  res.send('Stock Price Checker listo ✅');
+});
+
+const listener = app.listen(process.env.PORT || 10000, () => {
+  console.log('Server running on port ' + listener.address().port);
 });
 
 module.exports = app;
-
-const listener = app.listen(process.env.PORT || 10000, () => {
-  console.log('🚀 Server running on port ' + listener.address().port);
-});
-
