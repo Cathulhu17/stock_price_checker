@@ -23,15 +23,20 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Rutas de testing FCC
 fccTesting(app);
-require('./routes/api.js')(app);
 
+// Rutas principales del proyecto
+apiRoutes(app);
+
+// Ruta raíz
 app.get('/', (req, res) => {
-  res.send('Stock Price Checker listo ✅');
+  res.send('✅ Stock Price Checker listo sin MongoDB');
 });
 
+// Iniciar servidor
 const listener = app.listen(process.env.PORT || 10000, () => {
-  console.log('Server running on port ' + listener.address().port);
+  console.log('🚀 Servidor corriendo en el puerto ' + listener.address().port);
 });
 
 module.exports = app;
