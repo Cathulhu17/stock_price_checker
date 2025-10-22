@@ -1,7 +1,7 @@
 'use strict';
 const fetch = require('node-fetch');
 const bcrypt = require('bcrypt');
-const Stock = require('./models/Stocks'); // Modelo de MongoDB
+const Stock = require('./models/stock'); // Modelo de MongoDB
 
 module.exports = function (app) {
   // Ruta principal: /api/stock-prices
@@ -25,9 +25,9 @@ module.exports = function (app) {
         const anonIp = bcrypt.hashSync(ip, 4);
 
         // 🔹 Guardar o actualizar en MongoDB
-        let stockDoc = await Stock.findOne({ symbol: stockSymbol });
+        let stockDoc = await stock.findOne({ symbol: stockSymbol });
         if (!stockDoc) {
-          stockDoc = new Stock({ symbol: stockSymbol, price, likes: like ? [anonIp] : [] });
+          stockDoc = new stock({ symbol: stockSymbol, price, likes: like ? [anonIp] : [] });
         } else {
           stockDoc.price = price;
           if (like && !stockDoc.likes.includes(anonIp)) stockDoc.likes.push(anonIp);
