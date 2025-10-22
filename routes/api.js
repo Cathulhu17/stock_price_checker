@@ -1,7 +1,7 @@
 'use strict';
 const fetch = require('node-fetch');
 const bcrypt = require('bcrypt');
-const Stock = require('./models/stock'); // Modelo de MongoDB
+const Stock = require('./models/Stock'); // Modelo de MongoDB
 
 module.exports = function (app) {
   // Ruta principal: /api/stock-prices
