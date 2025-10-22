@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fccTesting = require('./routes/fcctesting.js');
+const apiRoutes = require('./routes/api.js');
 
 const app = express();
 
