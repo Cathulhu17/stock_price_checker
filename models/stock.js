@@ -7,4 +7,4 @@ const stockSchema = new mongoose.Schema({
   likes: { type: [String], default: [] }, // array de IPs anonimizadas
 });
 
-module.exports = mongoose.model('Stock', stockSchema);
+module.exports = mongoose.model('stock', stockSchema);
