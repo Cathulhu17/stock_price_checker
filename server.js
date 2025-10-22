@@ -7,7 +7,7 @@ const fccTesting = require('./routes/fcctesting.js');
 
 const app = express();
 
-// Configurar Helmet (CSP correcto para FCC)
+// ✅ Política CSP mínima, como pide FCC
 app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
@@ -23,21 +23,16 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Rutas de testing FCC
 fccTesting(app);
-
-// Rutas de API
 require('./routes/api.js')(app);
 
-// Página base
 app.get('/', (req, res) => {
-  res.send('Stock Price Checker - modo FreeCodeCamp listo ✅');
+  res.send('Stock Price Checker - modo FCC listo ✅');
 });
 
-// Exportar app (necesario para testing)
 module.exports = app;
 
-// Iniciar servidor
-const listener = app.listen(process.env.PORT || 3000, () => {
+const listener = app.listen(process.env.PORT || 10000, () => {
   console.log('🚀 Server running on port ' + listener.address().port);
 });
+
