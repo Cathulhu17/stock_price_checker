@@ -1,10 +1,10 @@
-// models/Stock.js
+'use strict';
 const mongoose = require('mongoose');
 
 const stockSchema = new mongoose.Schema({
-  stock: { type: String, required: true, unique: true },
-  likes: { type: Number, default: 0 },
-  ip_addresses: [String],
+  symbol: { type: String, required: true, unique: true },
+  price: { type: Number, required: true },
+  likes: { type: [String], default: [] }, // array de IPs anonimizadas
 });
 
 module.exports = mongoose.model('Stock', stockSchema);
