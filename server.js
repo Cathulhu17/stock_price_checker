@@ -1,4 +1,5 @@
 'use strict';
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -8,7 +9,7 @@ const apiRoutes = require('./routes/api.js');
 
 const app = express();
 
-// ✅ Política CSP mínima, como pide FCC
+// 🛡️ Seguridad - solo scripts y estilos locales
 app.use(
   helmet.contentSecurityPolicy({
     useDefaults: true,
